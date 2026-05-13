@@ -22,12 +22,18 @@ function createPrismaClient() {
   const dbConfig = parseDatabaseUrl();
   const isLocal = dbConfig.host === 'localhost' || dbConfig.host === '127.0.0.1';
   
-  const adapter = new PrismaMariaDb({
+  const adapterConfig = {
     ...dbConfig,
+    connectionLimit: 5,
     connectTimeout: 30000,
     acquireTimeout: 30000,
-    ...(!isLocal ? { ssl: true } : {}),
-  });
+  };
+
+  if (!isLocal) {
+    adapterConfig.ssl = true;
+  }
+
+  const adapter = new PrismaMariaDb(adapterConfig);
   return new PrismaClient({ adapter });
 }
 
