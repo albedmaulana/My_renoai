@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Admin {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+}
+
+model Project {
+  id          String    @id @default(uuid())
+  code        String    @unique
+  roomType    String
+  area        Float
+  budgetLimit Float
+  status      String    @default("Draft")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  rabs        RAB[]
+}
+
+model Material {
+  id          String    @id @default(uuid())
+  name        String
+  category    String
+  specs       String    // Storing as JSON string or text
+  unitPrice   Float
+  unit        String
+  stockStatus String    @default("Tersedia")
+}
+
+model RAB {
+  id           String    @id @default(uuid())
+  project      Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId    String
+  taxRate      Float     @default(11.0)
+  subTotal     Float
+  grandTotal   Float
+  documentCode String    @unique
+  items        RABItem[]
+  createdAt    DateTime  @default(now())
+}
+
+model RABItem {
+  id          String   @id @default(uuid())
+  rab         RAB      @relation(fields: [rabId], references: [id], onDelete: Cascade)
+  rabId       String
+  description String
+  volume      Float
+  unit        String
+  unitPrice   Float
+  totalPrice  Float
+}
