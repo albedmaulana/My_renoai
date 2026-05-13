@@ -20,13 +20,13 @@ function parseDatabaseUrl() {
 
 function createPrismaClient() {
   const dbConfig = parseDatabaseUrl();
-  const isCloud = dbConfig.host.includes('tidbcloud') || 
-                  dbConfig.host.includes('aiven') || 
-                  dbConfig.host !== 'localhost';
+  const isLocal = dbConfig.host === 'localhost' || dbConfig.host === '127.0.0.1';
   
   const adapter = new PrismaMariaDb({
     ...dbConfig,
-    ...(isCloud ? { ssl: { rejectUnauthorized: true } } : {}),
+    connectTimeout: 30000,
+    acquireTimeout: 30000,
+    ...(!isLocal ? { ssl: true } : {}),
   });
   return new PrismaClient({ adapter });
 }
