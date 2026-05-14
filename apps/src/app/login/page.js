@@ -5,7 +5,6 @@ import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('user'); // 'user' or 'admin'
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -18,8 +17,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const endpoint = activeTab === 'admin' ? '/api/admin/login' : '/api/auth/login';
-      const res = await fetch(endpoint, {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -28,7 +26,7 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (data.success) {
-        if (activeTab === 'admin') {
+        if (data.role === 'admin') {
           router.push('/admin/dashboard');
         } else {
           router.push('/');
@@ -41,14 +39,6 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Reset form when switching tabs
-  const switchTab = (tab) => {
-    setActiveTab(tab);
-    setUsername('');
-    setPassword('');
-    setError('');
   };
 
   return (
@@ -74,13 +64,11 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-md mx-4">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-2xl shadow-lg shadow-blue-500/25 mb-4 hover:scale-105 transition-transform">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-          </Link>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-2xl shadow-lg shadow-blue-500/25 mb-4">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
           <h1 className="text-3xl font-bold text-white tracking-tight">
             Reno<span className="text-blue-400">AI</span>
           </h1>
@@ -89,83 +77,9 @@ export default function LoginPage() {
 
         {/* Card */}
         <div className="bg-white/[0.07] backdrop-blur-xl rounded-2xl border border-white/10 p-8 shadow-2xl">
-          {/* Tab Selector */}
-          <div className="flex rounded-xl bg-white/5 border border-white/10 p-1 mb-6">
-            <button
-              type="button"
-              onClick={() => switchTab('user')}
-              className={`flex-1 flex items-center justify-center space-x-2 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                activeTab === 'user'
-                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              <span>Pengguna</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => switchTab('admin')}
-              className={`flex-1 flex items-center justify-center space-x-2 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                activeTab === 'admin'
-                  ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/25'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-              <span>Admin</span>
-            </button>
-          </div>
-
-          {/* Header */}
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-white">
-              {activeTab === 'admin' ? 'Masuk sebagai Admin' : 'Masuk sebagai Pengguna'}
-            </h2>
-            <p className="text-sm text-slate-400 mt-1">
-              {activeTab === 'admin'
-                ? 'Gunakan kredensial admin untuk mengakses panel'
-                : 'Masuk untuk mengakses fitur estimasi & katalog'
-              }
-            </p>
-          </div>
-
-          {/* Role indicator */}
-          <div className={`mb-5 px-4 py-2.5 rounded-lg border flex items-center space-x-3 transition-all duration-300 ${
-            activeTab === 'admin'
-              ? 'bg-purple-500/10 border-purple-500/20'
-              : 'bg-blue-500/10 border-blue-500/20'
-          }`}>
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-              activeTab === 'admin'
-                ? 'bg-purple-500/20'
-                : 'bg-blue-500/20'
-            }`}>
-              {activeTab === 'admin' ? (
-                <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              ) : (
-                <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-              )}
-            </div>
-            <div>
-              <div className={`text-xs font-semibold uppercase tracking-wider ${
-                activeTab === 'admin' ? 'text-purple-400' : 'text-blue-400'
-              }`}>
-                {activeTab === 'admin' ? 'Panel Administrasi' : 'Panel Pengguna'}
-              </div>
-              <div className="text-[11px] text-slate-500">
-                {activeTab === 'admin' ? 'Kelola material, proyek & data sistem' : 'Hitung RAB, lihat katalog & riwayat'}
-              </div>
-            </div>
+            <h2 className="text-xl font-bold text-white">Selamat Datang</h2>
+            <p className="text-sm text-slate-400 mt-1">Masukkan kredensial Anda untuk melanjutkan</p>
           </div>
 
           {error && (
@@ -238,11 +152,7 @@ export default function LoginPage() {
               id="login-submit"
               type="submit"
               disabled={isLoading}
-              className={`w-full py-3 rounded-xl text-sm font-bold text-white shadow-lg disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-2 ${
-                activeTab === 'admin'
-                  ? 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 shadow-purple-500/25'
-                  : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-blue-500/25'
-              }`}
+              className="w-full py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-500/25 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-2"
             >
               {isLoading ? (
                 <>
@@ -254,7 +164,7 @@ export default function LoginPage() {
                 </>
               ) : (
                 <>
-                  <span>Masuk sebagai {activeTab === 'admin' ? 'Admin' : 'Pengguna'}</span>
+                  <span>Masuk</span>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                   </svg>
@@ -263,14 +173,32 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-xs text-slate-500">
-              {activeTab === 'admin' ? (
-                <>Default: <span className="text-slate-400 font-mono">admin</span> / <span className="text-slate-400 font-mono">admin123</span></>
-              ) : (
-                <>Default: <span className="text-slate-400 font-mono">user</span> / <span className="text-slate-400 font-mono">user123</span></>
-              )}
-            </p>
+          <div className="mt-6 pt-5 border-t border-white/5">
+            <p className="text-[11px] text-slate-500 text-center uppercase tracking-wider font-semibold mb-3">Akun Default</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-white/5 rounded-lg px-3 py-2.5 border border-white/5">
+                <div className="flex items-center space-x-2 mb-1.5">
+                  <div className="w-5 h-5 bg-blue-500/20 rounded flex items-center justify-center">
+                    <svg className="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <span className="text-[11px] text-slate-400 font-semibold">Pengguna</span>
+                </div>
+                <p className="text-xs text-slate-300 font-mono">user / user123</p>
+              </div>
+              <div className="bg-white/5 rounded-lg px-3 py-2.5 border border-white/5">
+                <div className="flex items-center space-x-2 mb-1.5">
+                  <div className="w-5 h-5 bg-purple-500/20 rounded flex items-center justify-center">
+                    <svg className="w-3 h-3 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                  </div>
+                  <span className="text-[11px] text-slate-400 font-semibold">Admin</span>
+                </div>
+                <p className="text-xs text-slate-300 font-mono">admin / admin123</p>
+              </div>
+            </div>
           </div>
         </div>
 
