@@ -1,6 +1,15 @@
 import Link from 'next/link';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
-export default function Home() {
+export default async function Home() {
+  const cookieStore = await cookies();
+  const userToken = cookieStore.get('user_token')?.value;
+
+  if (!userToken) {
+    redirect('/login');
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
