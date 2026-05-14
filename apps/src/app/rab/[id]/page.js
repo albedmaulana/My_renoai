@@ -6,9 +6,18 @@ import Link from 'next/link';
 export default function RABDetail() {
   const params = useParams();
   const [rab, setRab] = useState(null);
+  const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Fetch user info
+    fetch('/api/auth/me')
+      .then(res => res.json())
+      .then(data => {
+        if (data.user) setUser(data.user);
+      })
+      .catch(() => {});
+
     if (params.id) {
       fetch(`/api/rab/${params.id}`)
         .then(res => res.json())
@@ -119,8 +128,8 @@ export default function RABDetail() {
           </div>
           <div>
             <h3 className="font-bold text-navy mb-3 uppercase tracking-wider text-xs border-b border-slate-200 pb-1 inline-block">PEMILIK PROYEK</h3>
-            <div className="font-semibold text-base mb-1">Pengguna RenoAI</div>
-            <div className="text-slate-500">Klien Sistem Terdaftar</div>
+            <div className="font-semibold text-base mb-1">{user?.username || 'Memuat...'}</div>
+            <div className="text-slate-500">{user?.email || '-'}</div>
             <div className="text-slate-500 mt-2 font-mono text-xs">ID: {project.id.split('-')[0]}</div>
           </div>
         </div>
@@ -218,8 +227,8 @@ export default function RABDetail() {
 
           <div>
             <div className="text-sm mb-16">Menyetujui,</div>
-            <div className="font-bold border-b border-slate-300 pb-1 px-4 text-transparent inline-block select-none bg-slate-100 w-32 h-6 mb-1">
-              -
+            <div className="font-bold border-b border-slate-300 pb-1 px-4 inline-block">
+              {user?.username || '-'}
             </div>
             <div className="text-xs text-slate-500 mt-1 uppercase tracking-wider">PEMILIK PROYEK / OWNER</div>
           </div>
