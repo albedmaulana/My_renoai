@@ -6,18 +6,9 @@ import Link from 'next/link';
 export default function RABDetail() {
   const params = useParams();
   const [rab, setRab] = useState(null);
-  const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch user info
-    fetch('/api/auth/me')
-      .then(res => res.json())
-      .then(data => {
-        if (data.user) setUser(data.user);
-      })
-      .catch(() => {});
-
     if (params.id) {
       fetch(`/api/rab/${params.id}`)
         .then(res => res.json())
@@ -60,7 +51,7 @@ export default function RABDetail() {
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       
       {/* Top Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 print:hidden">
         <div className="mb-4 sm:mb-0">
           <div className="text-sm text-slate-500 mb-1">
             <Link href="/history" className="hover:text-primary">Riwayat Proyek</Link> &gt; Preview RAB #{rab.documentCode}
@@ -69,19 +60,15 @@ export default function RABDetail() {
           <p className="text-slate-600 text-sm">Review detail anggaran biaya sebelum melakukan ekspor final.</p>
         </div>
         <div className="flex space-x-3">
-          <button onClick={() => alert("Mengunduh dokumen PDF...")} className="flex items-center space-x-2 bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-md font-semibold text-sm hover:bg-slate-50 transition-colors">
+          <button onClick={() => window.print()} className="flex items-center space-x-2 bg-navy hover:bg-slate-800 text-white px-4 py-2 rounded-md font-semibold text-sm transition-colors shadow-sm">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
             <span>DOWNLOAD PDF</span>
-          </button>
-          <button onClick={() => alert("Membuka WhatsApp Web...")} className="flex items-center space-x-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md font-semibold text-sm transition-colors shadow-sm">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-            <span>BAGIKAN KE WHATSAPP</span>
           </button>
         </div>
       </div>
 
       {/* Document Layout */}
-      <div className="bg-white border border-slate-300 shadow-lg p-8 md:p-12 font-sans text-slate-800 rounded-sm relative overflow-hidden">
+      <div className="bg-white border border-slate-300 shadow-lg p-8 md:p-12 font-sans text-slate-800 rounded-sm relative overflow-hidden print:shadow-none print:border-none print:p-0">
         
         {/* Document Header */}
         <div className="flex justify-between items-start border-b-2 border-navy pb-6 mb-6">
@@ -128,9 +115,14 @@ export default function RABDetail() {
           </div>
           <div>
             <h3 className="font-bold text-navy mb-3 uppercase tracking-wider text-xs border-b border-slate-200 pb-1 inline-block">PEMILIK PROYEK</h3>
-            <div className="font-semibold text-base mb-1">{user?.username || 'Memuat...'}</div>
-            <div className="text-slate-500">{user?.email || '-'}</div>
+            <div className="font-semibold text-base mb-1">{project.user?.name || 'Pengguna RenoAI'}</div>
+            <div className="text-slate-500">{project.user?.email || 'Klien Sistem Terdaftar'}</div>
             <div className="text-slate-500 mt-2 font-mono text-xs">ID: {project.id.split('-')[0]}</div>
+            {project.status === 'Dioptimasi' && (
+              <div className="mt-3 bg-amber-50 border border-amber-200 text-amber-700 text-xs px-3 py-2 rounded-md">
+                ⚡ RAB ini telah dioptimasi agar sesuai dengan batas anggaran Anda.
+              </div>
+            )}
           </div>
         </div>
 
@@ -207,7 +199,7 @@ export default function RABDetail() {
 
         {/* Status watermark */}
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[150px] font-bold text-slate-100 opacity-50 rotate-[-45deg] pointer-events-none select-none">
-          DRAFT
+          {project.status === 'Dioptimasi' ? 'OPTIMIZED' : 'DRAFT'}
         </div>
 
         {/* Signatures */}
@@ -227,8 +219,8 @@ export default function RABDetail() {
 
           <div>
             <div className="text-sm mb-16">Menyetujui,</div>
-            <div className="font-bold border-b border-slate-300 pb-1 px-4 inline-block">
-              {user?.username || '-'}
+            <div className="font-bold border-b border-slate-300 pb-1 px-4 text-transparent inline-block select-none bg-slate-100 w-32 h-6 mb-1">
+              -
             </div>
             <div className="text-xs text-slate-500 mt-1 uppercase tracking-wider">PEMILIK PROYEK / OWNER</div>
           </div>
@@ -237,7 +229,7 @@ export default function RABDetail() {
       </div>
 
       {/* Info Cards */}
-      <div className="grid md:grid-cols-2 gap-6 mt-8">
+      <div className="grid md:grid-cols-2 gap-6 mt-8 print:hidden">
         <div className="bg-blue-50 border border-blue-100 rounded-lg p-5 flex space-x-4">
           <div className="bg-white p-2 rounded-full border border-blue-200 h-fit">
             <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>

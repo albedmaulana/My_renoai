@@ -7,9 +7,8 @@ export default function LayoutWrapper({ children }) {
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith('/admin');
   const isLogin = pathname === '/login';
-  const isRegister = pathname === '/register';
 
-  if (isAdmin || isLogin || isRegister) {
+  if (isAdmin || isLogin) {
     return <>{children}</>;
   }
 

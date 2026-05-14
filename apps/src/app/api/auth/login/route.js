@@ -1,94 +1,69 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import { signToken, COOKIE_NAME, USER_COOKIE_NAME } from '@/lib/auth';
+import { login } from '@/lib/auth';
 
-export async function POST(req) {
+export async function POST(request) {
   try {
-    const { username, password } = await req.json();
+    const { username, password } = await request.json();
 
     if (!username || !password) {
       return NextResponse.json(
-        { error: 'Username dan password wajib diisi' },
+        { message: 'Username and password are required' },
         { status: 400 }
       );
     }
 
-    // 1. Check Admin table first
-    const admin = await prisma.admin.findUnique({
+    // 1. Try to find in User table
+    let user = await prisma.user.findUnique({
       where: { username },
     });
 
-    if (admin) {
-      const isValid = await bcrypt.compare(password, admin.password);
-      if (isValid) {
-        const token = await signToken({
-          id: admin.id,
-          username: admin.username,
-          name: admin.name,
-          role: 'admin',
-        });
+    let role = 'user';
 
-        const response = NextResponse.json({
-          success: true,
-          role: 'admin',
-          user: { id: admin.id, username: admin.username, name: admin.name },
-        });
-
-        response.cookies.set(COOKIE_NAME, token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 60 * 60 * 24,
-        });
-
-        return response;
-      }
+    // 2. If not found in User, try Admin table
+    if (!user) {
+      user = await prisma.admin.findUnique({
+        where: { username },
+      });
+      if (user) role = 'admin';
     }
 
-    // 2. Check User table
-    const user = await prisma.user.findUnique({
-      where: { username },
-    });
-
-    if (user) {
-      const isValid = await bcrypt.compare(password, user.password);
-      if (isValid) {
-        const token = await signToken({
-          id: user.id,
-          username: user.username,
-          name: user.name,
-          role: 'user',
-        });
-
-        const response = NextResponse.json({
-          success: true,
-          role: 'user',
-          user: { id: user.id, username: user.username, name: user.name },
-        });
-
-        response.cookies.set(USER_COOKIE_NAME, token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 60 * 60 * 24,
-        });
-
-        return response;
-      }
+    if (!user) {
+      return NextResponse.json(
+        { message: 'Invalid credentials' },
+        { status: 401 }
+      );
     }
 
-    // 3. Not found in either table
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return NextResponse.json(
+        { message: 'Invalid credentials' },
+        { status: 401 }
+      );
+    }
+
+    // Create session
+    const userSession = {
+      id: user.id,
+      username: user.username,
+      name: user.name,
+      email: user.email || null,
+    };
+    
+    await login(userSession, role);
+
     return NextResponse.json(
-      { error: 'Username atau password salah' },
-      { status: 401 }
+      { message: 'Login successful', user: { ...userSession, role } },
+      { status: 200 }
     );
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(
-      { error: 'Kesalahan server: ' + (error.message || 'Unknown') },
+      { message: 'Internal server error' },
       { status: 500 }
     );
   }

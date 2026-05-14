@@ -22,6 +22,15 @@ export default function Estimator() {
       const data = await res.json();
       
       if (data.success && data.rabId) {
+        if (data.isOptimized) {
+          // Beri tahu user bahwa RAB telah dioptimasi
+          alert(
+            `⚡ Budget Anda Rp ${budget.toLocaleString('id-ID')} lebih rendah dari estimasi standar.\n\n` +
+            `RAB telah dioptimasi agar sesuai budget.\n` +
+            `Total Akhir: Rp ${data.grandTotal.toLocaleString('id-ID')}\n\n` +
+            `Klik OK untuk melihat detail RAB.`
+          );
+        }
         router.push(`/rab/${data.rabId}`);
       } else {
         alert("Gagal melakukan kalkulasi: " + (data.error || "Unknown error"));

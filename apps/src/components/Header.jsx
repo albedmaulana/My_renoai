@@ -10,7 +10,48 @@ export default function Header() {
   const [isChecking, setIsChecking] = useState(true);
   const [showDropdown, setShowDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showNotif, setShowNotif] = useState(false);
   const dropdownRef = useRef(null);
+  const notifRef = useRef(null);
+
+  const [notifications, setNotifications] = useState([
+    {
+      id: 1,
+      type: 'system',
+      title: 'Database Material Diperbarui',
+      message: '55 material baru telah ditambahkan lengkap dengan foto asli dan harga pasar 2024/2025. Cek katalog sekarang!',
+      time: 'Baru saja',
+      read: false,
+      icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+      color: 'green'
+    },
+    {
+      id: 2,
+      type: 'price',
+      title: 'Penyesuaian Harga Wiremesh',
+      message: 'Harga Wiremesh M8 (2.1x5.4m) disesuaikan dari Rp 650.000 menjadi Rp 580.000 sesuai harga pasar terbaru.',
+      time: '1 jam yang lalu',
+      read: false,
+      icon: 'M13 17h8m0 0V9m0 8l-8-8-4 4-6-6',
+      color: 'blue'
+    },
+    {
+      id: 3,
+      type: 'info',
+      title: 'Selamat Datang di RenoAI',
+      message: 'Platform estimasi RAB konstruksi cerdas. Mulai optimasi biaya proyek pertama Anda!',
+      time: 'Kemarin',
+      read: true,
+      icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+      color: 'slate'
+    }
+  ]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const markAllAsRead = () => {
+    setNotifications(notifications.map(n => ({ ...n, read: true })));
+  };
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -33,6 +74,9 @@ export default function Header() {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setShowNotif(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -90,11 +134,49 @@ export default function Header() {
           {/* Right side: user + hamburger */}
           <div className="flex items-center space-x-3">
             {/* Notification bell - desktop only */}
-            <button className="hidden sm:block text-slate-500 hover:text-slate-700">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-            </button>
+            <div className="relative hidden sm:block" ref={notifRef}>
+              <button 
+                onClick={() => setShowNotif(!showNotif)}
+                className="text-slate-500 hover:text-primary relative p-1 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                <span className={`absolute top-0 right-0 block h-2 w-2 rounded-full ring-2 ring-white transition-opacity ${unreadCount > 0 ? 'bg-red-500 opacity-100' : 'opacity-0'}`}></span>
+              </button>
+
+              {showNotif && (
+                <div className="absolute right-0 mt-3 w-80 rounded-xl bg-white border border-slate-200 shadow-2xl py-2 z-50 origin-top-right animate-in fade-in zoom-in duration-200">
+                  <div className="px-4 py-2 border-b border-slate-100 flex justify-between items-center">
+                    <h3 className="font-bold text-navy">Notifikasi {unreadCount > 0 && <span className="bg-red-100 text-red-600 text-[10px] px-2 py-0.5 rounded-full ml-1">{unreadCount}</span>}</h3>
+                    <button 
+                      onClick={markAllAsRead}
+                      className="text-xs text-primary font-medium hover:underline disabled:opacity-50 disabled:hover:no-underline"
+                      disabled={unreadCount === 0}
+                    >
+                      Tandai sudah dibaca
+                    </button>
+                  </div>
+                  <div className="max-h-80 overflow-y-auto">
+                    {notifications.map(notif => (
+                      <div key={notif.id} className={`px-4 py-3 transition-colors border-b border-slate-50 cursor-pointer flex gap-3 ${notif.read ? 'opacity-60 hover:bg-slate-50' : 'bg-blue-50/30 hover:bg-blue-50/50'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 bg-${notif.color}-100 text-${notif.color}-600`}>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={notif.icon} /></svg>
+                        </div>
+                        <div>
+                          <p className={`text-sm font-semibold ${notif.read ? 'text-slate-700' : 'text-slate-900'}`}>{notif.title}</p>
+                          <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{notif.message}</p>
+                          <p className="text-[10px] text-slate-400 mt-1 font-medium">{notif.time}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="px-4 py-2 border-t border-slate-100 text-center">
+                    <button className="text-xs font-bold text-slate-500 hover:text-primary transition-colors">Lihat Semua Notifikasi</button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* User info */}
             {isChecking ? (
@@ -138,6 +220,16 @@ export default function Header() {
                         </svg>
                         <span>Riwayat Proyek</span>
                       </Link>
+                      {user.role === 'admin' && (
+                        <Link href="/admin/dashboard" onClick={() => setShowDropdown(false)}
+                          className="flex items-center space-x-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors font-medium">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          <span>Panel Admin</span>
+                        </Link>
+                      )}
                     </div>
                     <div className="border-t border-slate-100 py-1">
                       <button id="logout-button" onClick={handleLogout}

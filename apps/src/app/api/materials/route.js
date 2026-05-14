@@ -4,6 +4,12 @@ import { prisma } from '@/lib/prisma';
 export async function GET() {
   try {
     const materials = await prisma.material.findMany();
+    
+    // Debug log
+    if (materials.length > 0) {
+      console.log('DEBUG API MATERIAL 0:', JSON.stringify(materials[0], null, 2));
+    }
+
     // Parse specs if it's stored as JSON string
     const formattedMaterials = materials.map(m => ({
       ...m,

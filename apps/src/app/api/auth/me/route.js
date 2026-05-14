@@ -1,31 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getUserFromRequest } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { getSession } from '@/lib/auth';
 
 export async function GET() {
-  const tokenUser = await getUserFromRequest();
-  if (!tokenUser) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const session = await getSession();
+  
+  if (!session) {
+    return NextResponse.json({ user: null }, { status: 200 });
   }
 
-  // Fetch full user data from database to include email
-  try {
-    const dbUser = await prisma.user.findUnique({
-      where: { id: tokenUser.id },
-      select: { id: true, username: true, name: true, email: true },
-    });
-
-    if (dbUser) {
-      return NextResponse.json({
-        user: {
-          ...dbUser,
-          role: 'user',
-        },
-      });
-    }
-  } catch {
-    // Fallback to JWT data if DB is unreachable
-  }
-
-  return NextResponse.json({ user: tokenUser });
+  return NextResponse.json({ user: session.user }, { status: 200 });
 }

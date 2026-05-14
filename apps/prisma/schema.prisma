@@ -21,6 +21,7 @@ model User {
   name      String
   email     String?
   createdAt DateTime @default(now())
+  projects  Project[]
 }
 
 model Project {
@@ -33,6 +34,8 @@ model Project {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   rabs        RAB[]
+  user        User?     @relation(fields: [userId], references: [id])
+  userId      String?
 }
 
 model Material {
@@ -43,6 +46,7 @@ model Material {
   unitPrice   Float
   unit        String
   stockStatus String    @default("Tersedia")
+  imageUrl    String?
 }
 
 model RAB {
