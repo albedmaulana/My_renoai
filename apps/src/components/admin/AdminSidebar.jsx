@@ -1,14 +1,31 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 
 export default function AdminSidebar({ adminName }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  // Prevent body scroll when mobile sidebar is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [mobileOpen]);
 
   const handleLogout = async () => {
     await fetch('/api/admin/logout', { method: 'POST' });
-    router.push('/admin/login');
+    router.push('/login');
   };
 
   const menuItems = [
@@ -41,8 +58,8 @@ export default function AdminSidebar({ adminName }) {
     },
   ];
 
-  return (
-    <aside className="w-64 bg-[#0F172A] min-h-screen flex flex-col fixed left-0 top-0 z-40">
+  const sidebarContent = (
+    <>
       {/* Logo */}
       <div className="px-6 py-6 border-b border-slate-800">
         <Link href="/admin/dashboard" className="flex items-center space-x-3">
@@ -104,6 +121,69 @@ export default function AdminSidebar({ adminName }) {
           <span>Logout</span>
         </button>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile Hamburger Button - fixed top bar */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-[#0F172A] border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+        <Link href="/admin/dashboard" className="flex items-center space-x-2">
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-lg flex items-center justify-center">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <span className="text-white text-base font-bold">Reno<span className="text-blue-400">AI</span></span>
+        </Link>
+        <button
+          onClick={() => setMobileOpen(!mobileOpen)}
+          className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+        >
+          {mobileOpen ? (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          )}
+        </button>
+      </div>
+
+      {/* Mobile Overlay */}
+      {mobileOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Mobile Sidebar Drawer */}
+      <aside
+        className={`lg:hidden fixed top-0 left-0 z-50 w-72 h-full bg-[#0F172A] flex flex-col transform transition-transform duration-300 ease-in-out ${
+          mobileOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        {/* Close button inside drawer */}
+        <div className="absolute top-4 right-4">
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        {sidebarContent}
+      </aside>
+
+      {/* Desktop Sidebar - always visible */}
+      <aside className="hidden lg:flex w-64 bg-[#0F172A] min-h-screen flex-col fixed left-0 top-0 z-40">
+        {sidebarContent}
+      </aside>
+    </>
   );
 }
