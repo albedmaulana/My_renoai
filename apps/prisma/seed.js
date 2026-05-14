@@ -5,12 +5,32 @@ require('dotenv').config();
 
 function parseDatabaseUrl() {
   const url = process.env.DATABASE_URL || 'mysql://root:@localhost:3306/renoai_db';
-  const match = url.match(/mysql:\/\/([^:]*):([^@]*)@([^:]*):(\d+)\/(.+)/);
+  const match = url.match(/mysql:\/\/([^:]*):([^@]*)@([^:]*):(\d+)\/([^?]*)/);
   if (!match) return { host: 'localhost', port: 3306, user: 'root', password: '', database: 'renoai_db' };
-  return { host: match[3], port: parseInt(match[4]), user: match[1], password: match[2], database: match[5] };
+  return {
+    host: match[3],
+    port: parseInt(match[4]),
+    user: decodeURIComponent(match[1]),
+    password: decodeURIComponent(match[2]),
+    database: match[5],
+  };
 }
 
-const adapter = new PrismaMariaDb(parseDatabaseUrl());
+const dbConfig = parseDatabaseUrl();
+const isLocal = dbConfig.host === 'localhost' || dbConfig.host === '127.0.0.1';
+
+const adapterConfig = {
+  ...dbConfig,
+  connectionLimit: 5,
+  connectTimeout: 30000,
+  acquireTimeout: 30000,
+};
+
+if (!isLocal) {
+  adapterConfig.ssl = true;
+}
+
+const adapter = new PrismaMariaDb(adapterConfig);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
@@ -33,6 +53,26 @@ async function main() {
     console.log('✅ Admin user created (admin / admin123)');
   } else {
     console.log('ℹ️  Admin user already exists');
+  }
+
+  // Seed Default Pengguna (User)
+  const userHashedPassword = await bcrypt.hash('user123', 10);
+  const existingUser = await prisma.user.findUnique({
+    where: { username: 'user' },
+  });
+
+  if (!existingUser) {
+    await prisma.user.create({
+      data: {
+        username: 'user',
+        password: userHashedPassword,
+        name: 'Pengguna Demo',
+        email: 'user@renoai.com',
+      },
+    });
+    console.log('✅ Default user created (user / user123)');
+  } else {
+    console.log('ℹ️  Default user already exists');
   }
 
   // Seed Materials

@@ -6,8 +6,9 @@ import Footer from './Footer';
 export default function LayoutWrapper({ children }) {
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith('/admin');
+  const isLogin = pathname === '/login';
 
-  if (isAdmin) {
+  if (isAdmin || isLogin) {
     return <>{children}</>;
   }
 

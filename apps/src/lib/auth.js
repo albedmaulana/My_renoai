@@ -6,6 +6,7 @@ const SECRET = new TextEncoder().encode(
 );
 
 const COOKIE_NAME = 'admin_token';
+const USER_COOKIE_NAME = 'user_token';
 
 export async function signToken(payload) {
   return new SignJWT(payload)
@@ -30,4 +31,11 @@ export async function getAdminFromRequest() {
   return verifyToken(token);
 }
 
-export { COOKIE_NAME };
+export async function getUserFromRequest() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(USER_COOKIE_NAME)?.value;
+  if (!token) return null;
+  return verifyToken(token);
+}
+
+export { COOKIE_NAME, USER_COOKIE_NAME };
