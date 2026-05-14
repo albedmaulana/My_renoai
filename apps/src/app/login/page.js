@@ -173,9 +173,20 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-xs text-slate-500">
-              Masukkan username dan password Anda untuk melanjutkan
+          {/* Divider */}
+          <div className="mt-6 flex items-center space-x-3">
+            <div className="flex-1 h-px bg-white/10"></div>
+            <span className="text-xs text-slate-500">atau</span>
+            <div className="flex-1 h-px bg-white/10"></div>
+          </div>
+
+          {/* Register Link */}
+          <div className="mt-4 text-center">
+            <p className="text-sm text-slate-400">
+              Belum punya akun?{' '}
+              <Link href="/register" className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors">
+                Daftar sekarang
+              </Link>
             </p>
           </div>
         </div>
